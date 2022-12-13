@@ -1,4 +1,5 @@
 const User = require('../models/User')
+const Recruiter = require('../models/Recruiter')
 const jwt = require('jsonwebtoken')
 
 const protectedRoute = async (req, res, next) => {
@@ -17,7 +18,8 @@ const protectedRoute = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
         
         // fetch for the user, and add a user object to the req object!
-        req.user = await User.findById(decoded.id)
+        if(req.user) req.user = await User.findById(decoded.id)
+        if(req.recruiter) req.recruiter = await Recruiter.findById(decoded.id)
 
         next();
 
@@ -25,5 +27,7 @@ const protectedRoute = async (req, res, next) => {
         throw new Error('Not authorized to access this route!!')
     }
 }
+
+
 
 module.exports = protectedRoute;

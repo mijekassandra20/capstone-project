@@ -5,36 +5,21 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto')
 const bcrypt = require('bcryptjs')
 
-const UserSchema = new Schema ({
-    userName: {
+const RecruiterSchema = new Schema ({
+    companyName: {
         type: String,
         unique: true,
-        required: [true, 'Please input a username!!'],
-        maxLength: [15, 'Username can not be more than 20 characters']
+        required: [true, 'Please input a company name!!'],
     },
 
-    firstName: {
+    companyDescription: {
         type: String,
-        required: [true, 'Please input a first name!!']
-    },
+        required: [true, 'Please input your company description!!']
+    }, 
 
-    lastName: {
+    address: {
         type: String,
-        required: [true, 'Please input a last name!!']
-    },
-
-    gender: {
-        type: String,
-        required: [true, 'Please input a gender!!'],
-        enum: [
-            'Male',
-            'Female'
-        ]
-    },
-
-    age: {
-        type: Number,
-        required: [true, 'Please input your age!!']
+        required: [true, 'Please input your company address!!']
     },
 
     email: {
@@ -62,20 +47,12 @@ const UserSchema = new Schema ({
         type: Date
     },
 
-    admin: {
-        type: Boolean,
-        default: false
-    }
-
-}, {
+},{
     timestamps: true
 })
 
-
-
-
 // bcrypt - pre hook the hashes the password before saving in the database
-UserSchema.pre('save', async function(next) {
+RecruiterSchema.pre('save', async function(next) {
 
     // first check if password is not modified
     if (!this.isModified('password')) next(); // login
@@ -86,21 +63,21 @@ UserSchema.pre('save', async function(next) {
 })
 
 // retrieve the signed JWT token when user logs in OR creates new account!
-UserSchema.methods.getSignedJwtToken = function() {
+RecruiterSchema.methods.getSignedJwtToken = function() {
     return jwt.sign( 
-        {id: this._id}, // token for a specific user id 
-        process.env.JWT_SECRET, // to decode 
-        {expiresIn: process.env.JWT_EXPIRE} // when it expires
+        {id: this._id}, 
+        process.env.JWT_SECRET,
+        {expiresIn: process.env.JWT_EXPIRE}
     )
 }
 
 // to match password for login
-UserSchema.methods.matchPassword = async function(enteredPassword) {
+RecruiterSchema.methods.matchPassword = async function(enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password)
 }
 
 // reset the password token
-UserSchema.methods.getResetPasswordToken = function() {
+RecruiterSchema.methods.getResetPasswordToken = function() {
     // create a hex token with size of 20
     const resetToken = crypto.randomBytes(20).toString('hex')
 
@@ -112,4 +89,4 @@ UserSchema.methods.getResetPasswordToken = function() {
     return resetToken;
 }
 
-module.exports = mongoose.model('User', UserSchema)
+module.exports = mongoose.model('Recruiter', RecruiterSchema)

@@ -1,9 +1,8 @@
-const User = require('../models/User')
+const Recruiter = require('../models/Recruiter')
 const crypto = require('crypto')
 
 // FOR ROOT '/' ENDPOINT
-
-const getUsers = async(req, res, next) => {
+const getRecruiters = async(req, res, next) => {
 
     const filter = {}; // filters to returns only selected fields eg. userName, gender
     const options = {}; // sorting, pagination , limit 20 data to come back, sorting by asc userName
@@ -33,71 +32,71 @@ const getUsers = async(req, res, next) => {
     }
 
     try {
-        const users = await User.find({}, filter, options);
+        const recruiters = await Recruiter.find({}, filter, options);
 
         res
         .status(200)
         .setHeader('Content-Type', 'application/json')
-        .json(users)
+        .json(recruiters)
 
     } catch (err) {
-        throw new Error (`Error retrieving all users: ${err.message}`);
+        throw new Error (`Error retrieving all recruiters: ${err.message}`);
     }
 }
 
-const postUser = async(req, res, next) => {
+const postRecruiter = async(req, res, next) => {
 
     try {
 
-        const user = await User.create(req.body);
+        const recruiter = await Recruiter.create(req.body);
 
-        sendTokenResponse(user, 201, res)
+        sendTokenResponse(recruiter, 201, res)
         
     } catch (err) {
-        throw new Error(`Error creating a new user: ${err.message}`)
+        throw new Error(`Error creating a new recruiter: ${err.message}`)
     }
     
 }
 
-const deleteUsers = async(req, res, next) => {
+const deleteRecruiters = async(req, res, next) => {
     
     try {
-        await User.deleteMany();
+        await Recruiter.deleteMany();
 
         res
         .status(200)
         .setHeader('Content-Type', 'application/json')
-        .json ({ success: true, msg: 'Successfully deleted all users!!'})
+        .json ({ success: true, msg: 'Successfully deleted all recruiters!!'})
         
     } catch (err) {
-        throw new Error(`Error deleting all users: ${err.message}`)
+        throw new Error(`Error deleting all recruiters: ${err.message}`)
     }
 
 }
 
-// FOR '/:userId' ENDPOINT
+// FOR '/:recruiterId' ENDPOINT
 
-const getUser = async (req, res, next) => {
+const getRecruiter = async (req, res, next) => {
 
     try {
-        const user = await User.findById(req.params.userId);
+        const recruiter = await Recruiter.findById(req.params.recruiterId);
 
         res
         .status(200)
         .setHeader('Content-Type', 'application/json')
-        .json(user)
+        .json(recruiter)
         
     } catch (err) {
-        throw new Error(`Error retrieving user with ID ${req.params.userId}: ${err.message}`)
+        throw new Error(`Error retrieving recruiter with ID ${req.params.recruiterId}: ${err.message}`)
     }
 
 }
 
-const updateUser = async (req, res, next) => {
+const updateRecruiter = async (req, res, next) => {
 
     try {
-        const user = await User.findByIdAndUpdate(
-            req.params.userId, 
+        const recruiter = await Recruiter.findByIdAndUpdate(
+            req.params.recruiterId, 
             {$set: req.body}, 
             {new: true}
         )
@@ -105,27 +104,27 @@ const updateUser = async (req, res, next) => {
         res
         .status(200)
         .setHeader('Content-Type', 'application/json')
-        .json(user)
+        .json(recruiter)
         
     } catch (err) {
-        throw new Error(`Error updating user with ID ${req.params.userId}: ${err.message}`)
+        throw new Error(`Error updating recruiter with ID ${req.params.recruiterId}: ${err.message}`)
     }
 
 }
 
-const deleteUser = async (req, res, next) => {
+const deleteRecruiter = async (req, res, next) => {
 
     try {
-        await User.findByIdAndDelete(req.params.userId)
+        await Recruiter.findByIdAndDelete(req.params.recruiterId)
 
         res
         .status(200)
         .setHeader('Content-Type', 'application/json')
-        .json({ success: true, msg: `Successfully deleted user with ID: ${req.params.userId}`})
+        .json({ success: true, msg: `Successfully deleted recruiter with ID: ${req.params.recruiterId}`})
 
         
     } catch (err) {
-        throw new Error(`Error deleting user with ID ${req.params.userId}: ${err.message}`)
+        throw new Error(`Error deleting recruiter with ID ${req.params.recruiterId}: ${err.message}`)
     }
 
 }
@@ -140,28 +139,28 @@ const login = async (req, res, next) => {
 
     if (!email || !password) throw new Error('Please input your email and password')
 
-    const user = await User.findOne({email}).select('+password')
+    const recruiter = await Recruiter.findOne({email}).select('+password')
 
-    if(!user) throw new Error('Invalid credentials')
+    if(!recruiter) throw new Error('Invalid credentials')
 
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await recruiter.matchPassword(password);
 
     if(!isMatch) throw new Error('Credentials do not match!')
 
-    sendTokenResponse(user, 200, res)
+    sendTokenResponse(recruiter, 200, res)
 }
 
 // FOR '/forgotPassword' ENDPOINT
 
 const forgotPassword = async (req, res, next) => {
-    const user = await User.findOne({ email: req.body.email })
+    const recruiter = await Recruiter.findOne({ email: req.body.email })
 
-    if(!user) throw new Error('User not found!!')
+    if(!recruiter) throw new Error('Recruiter not found!!')
 
-    const resetToken = user.getResetPasswordToken();
+    const resetToken = recruiter.getResetPasswordToken();
 
     try {
-        await user.save({ validateBeforeSave: false});
+        await recruiter.save({ validateBeforeSave: false});
 
         res
         .status(200)
@@ -172,10 +171,10 @@ const forgotPassword = async (req, res, next) => {
         })
         
     } catch (err) {
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpire = undefined;
+        recruiter.resetPasswordToken = undefined;
+        recruiter.resetPasswordExpire = undefined;
 
-        await user.save({ validateBeforeSave: false});
+        await recruiter.save({ validateBeforeSave: false});
 
         throw new Error('Failed to save reset password token')
         
@@ -186,35 +185,38 @@ const forgotPassword = async (req, res, next) => {
 const resetPassword = async (req, res, next) => {
     const resetPasswordToken = crypto.createHash('sha256').update(req.query.resetToken).digest('hex');
 
-    const user = await User.findOne({
+    const recruiter = await Recruiter.findOne({
         resetPasswordToken,
         resetPasswordExpire: { $gt: Date.now() }
     })
 
-    if(!user) throw new Error('Invalid token!')
+    if(!recruiter) throw new Error('Invalid token!')
 
-    user.password = req.body.password;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
+    recruiter.password = req.body.password;
+    recruiter.resetPasswordToken = undefined;
+    recruiter.resetPasswordExpire = undefined;
 
-    await user.save()
+    await recruiter.save()
 
-    sendTokenResponse(user, 200, res)
+    sendTokenResponse(recruiter, 200, res)
 }
 
 // FOR '/updatePassword' ENDPOINT
 const updatePassword = async (req, res, next) => {
-    const user = await User.findById(req.user.id).select('+password')
 
-    const passwordMatches = await user.matchPassword(req.body.password)
+    const recruiter = await Recruiter.findById(req.recruiter.id).select('+password')
+
+    console.log('IT PASSED!!!!!')
+
+    const passwordMatches = await recruiter.matchPassword(req.body.password)
 
     if(!passwordMatches) throw new Error('Password is incorrect');
 
-    user.password = req.body.newPassword;
+    recruiter.password = req.body.newPassword;
 
-    await user.save()
+    await recruiter.save()
 
-    sendTokenResponse(user, 200, res)
+    sendTokenResponse(recruiter, 200, res)
 
 }
 
@@ -226,15 +228,17 @@ const logout = async (req, res, next) => {
     .cookie('token', 'none', {
         expires: new Date(Date.now() + 10 * 1000),
         httpOnly: true
+        
     })
+
     .json({ success: true, msg: 'Successfully logged out!'})
     
 }
 
-const sendTokenResponse = (user, statusCode, res) => {
+const sendTokenResponse = (recruiter, statusCode, res) => {
 
     // generates a jwt token 
-    const token = user.getSignedJwtToken();
+    const token = recruiter.getSignedJwtToken();
     
     const options = {
         // set expiration for cookie to be ~2 hrs
@@ -251,17 +255,18 @@ const sendTokenResponse = (user, statusCode, res) => {
 
 }
 
-
 module.exports = {
-    getUsers,
-    postUser,
-    deleteUsers,
-    getUser,
-    updateUser,
-    deleteUser,
+    getRecruiters,
+    postRecruiter,
+    deleteRecruiters,
+    getRecruiter,
+    updateRecruiter,
+    deleteRecruiter,
     login,
     forgotPassword,
     resetPassword,
     updatePassword,
     logout
 }
+
+

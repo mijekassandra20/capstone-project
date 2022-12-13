@@ -5,8 +5,8 @@ const bodyParser = require('body-parser');
 const logger = require('./middlewares/logger');
 const errorHandler = require('./middlewares/error');
 const user = require('./routes/userRoutes');
-// const recruiter = require('./routes/recruiterRoutes');
-// const jobs = require('./routes/jobsRoutes');
+const job = require('./routes/jobRoutes');
+const recruiter = require('./routes/recruiterRoutes');
 const connectedDB = require('./config/db');
 const cookieParser = require('cookie-parser');
 const fileupload = require('express-fileupload')
@@ -69,8 +69,8 @@ app.use(logger);
 
 //hook up your routes
 app.use('/api/user', user)
-// app.use('/api/recruiter', recruiter)
-// app.use('/api/jobs', jobs)
+app.use('/api/job', job)
+app.use('/api/recruiter', recruiter)
 
 
 //handles our errors

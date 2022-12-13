@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-const protectedRoute = require('../middlewares/auth')
 const reqLogger = require('../middlewares/reqLogger')
+const protectedRoute = require('../middlewares/auth')
 
 const {
     userValidator,
